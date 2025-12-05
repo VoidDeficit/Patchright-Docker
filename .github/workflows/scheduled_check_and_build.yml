@@ -1,83 +1,96 @@
 # I'm building this with a couple references. chatgpt got me started, but did poorly as always. 
 # https://dev.to/willvelida/pushing-container-images-to-github-container-registry-with-github-actions-1m6b
 # This article seems like a good place to start
+name: Scheduled Patchright Build
 
-name: Build image on upstream release (patchright-nodejs)
-
-# run on schedule (every 15 minutes) and manually
+# Run on a schedule (every 4 hours) and allow manual dispatch
 on:
-  # workflow_dispatch: # This runs the script on every commit.
-  # schedule: #TODO Uncomment when I want this to run automatically
-  #   - cron: '0 */6 * * *'   # runs every 6 hours, on the hour. Is this too often?
+  # schedule:
+  #   - cron: '0 */4 * * *'   # every 4 hours
+  # workflow_dispatch:
 
+# Minimal permissions required:
 permissions:
-  contents: read
+  contents: write   # needed to commit last_release.txt
+  packages: write   # needed to push to ghcr.io
+  id-token: write
 
 jobs:
-  build-on-release:
+  check-and-build:
     runs-on: ubuntu-latest
-    env:
-      UPSTREAM_OWNER: "Kaliiiiiiiiii-Vinyzu"
-      UPSTREAM_REPO: "patchright-nodejs"
+
     steps:
-
-    
-      - name: Get latest upstream release tag
-        id: get_release
-        uses: actions/github-script@v6
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          script: |
-            const owner = process.env.UPSTREAM_OWNER;
-            const repo = process.env.UPSTREAM_REPO;
-            const release = await github.rest.repos.getLatestRelease({ owner, repo });
-            return release.data.tag_name;
-      # latest tag is available as steps.get_release.outputs.result
+          persist-credentials: true
+          fetch-depth: 0
 
-
-      - name: Checkout (for build context) #I don't know what this does. What is it checking out? This repo?
-        uses: actions/checkout@main
-
-
-      - name: Check if image for this tag already exists in registry
-        id: check_image
+      - name: Install jq (if not already present)
         run: |
-          IMAGE="${{ env.REGISTRY_IMAGE }}"
-          TAG="${{ steps.get_release.outputs.result }}"
-          echo "Checking $IMAGE:$TAG"
-          # Try to pull the image; success => exists=true
-          if docker pull "$IMAGE:$TAG"; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
+          sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Query upstream Patchright latest release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Querying GitHub API for latest release..."
+          latest=$(curl -s -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            "https://api.github.com/repos/Kaliiiiiiiiii-Vinyzu/patchright/releases/latest" \
+            | jq -r .tag_name)
+          if [ -z "$latest" ] || [ "$latest" = "null" ]; then
+            echo "Could not determine latest release tag. Aborting."
+            exit 1
           fi
+          echo "latest=$latest" >> $GITHUB_ENV
+          echo "Found latest upstream release: $latest"
 
+      - name: Read stored last release (if any)
+        id: read_release
+        run: |
+          if [ -f last_release.txt ]; then
+            stored=$(cat last_release.txt | tr -d '\n')
+          else
+            stored=""
+          fi
+          echo "stored=$stored" >> $GITHUB_OUTPUT
 
+      - name: Compare versions and exit if unchanged
+        run: |
+          echo "Upstream latest: $LATEST"
+          echo "Stored last release: ${{ steps.read_release.outputs.stored }}"
+          if [ "$LATEST" = "${{ steps.read_release.outputs.stored }}" ]; then
+            echo "No new release detected. Exiting workflow."
+            exit 0
+          fi
+          echo "New release detected: $LATEST"
 
-      - name: Build and push (only if image missing)
-        if: steps.check_image.outputs.exists == 'false'
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image to GHCR
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./dockerfile
           push: true
-          # tag with release tag and latest
           tags: |
-            ${{ env.REGISTRY_IMAGE }}:${{ steps.get_release.outputs.result }}
-            ${{ env.REGISTRY_IMAGE }}:latest
-          # optionally enable buildx cache; configure if you want
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+            ghcr.io/${{ github.repository_owner }}/patchright-playwright:${{ env.latest }}
+            ghcr.io/${{ github.repository_owner }}/patchright-playwright:latest
+          # optional: set platform/build args if needed
+          # platforms: linux/amd64
 
+      - name: Record new release and push to repo
+        env:
+          LATEST: ${{ env.latest }}
+        run: |
+          echo "${LATEST}" > last_release.txt
+          git add last_release.txt
+          git -c user.name="github-actions[bot]" -c user.email="github-actions[bot]@users.noreply.github.com" commit -m "Update last_release to ${LATEST}" || echo "Nothing to commit"
+          git push
 
-          
-      - name: 'Login to GitHub Container Registry'
-            uses: docker/login-action@v1
-            with:
-              registry: ghcr.io
-              username: ${{github.actor}}
-              password: ${{secrets.GITHUB_TOKEN}}
-
-
-
-      - name: Notify already built
-        if: steps.check_image.outputs.exists == 'true'
-        run: echo "Image already exists for tag ${{ steps.get_release.outputs.result }}; skipping build."
