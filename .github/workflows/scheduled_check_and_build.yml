@@ -82,4 +82,4 @@ jobs:
 
       - name: No-op (no new release)
         if: ${{ steps.get_release.outputs.tag == steps.read_prev.outputs.prev }}
-        run: echo "No new upstream Patchright release detected (tag: ${{ steps.get_release.outputs.tag }})."
+        run: echo "No new upstream Patchright release detected (tag ${{ steps.get_release.outputs.tag }})."
