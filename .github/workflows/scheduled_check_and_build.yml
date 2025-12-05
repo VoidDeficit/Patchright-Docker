@@ -65,8 +65,6 @@ jobs:
           tags: |
             ghcr.io/${{ toLower(github.repository_owner) }}/${{ env.IMAGE_NAME }}:${{ steps.get_release.outputs.tag }}
             ghcr.io/${{ toLower(github.repository_owner) }}/${{ env.IMAGE_NAME }}:latest
-          # Optionally set platforms or build-args if needed:
-          # platforms: linux/amd64,linux/arm64
 
       - name: Update .last_patchright_release and push
         if: ${{ steps.get_release.outputs.tag != steps.read_prev.outputs.prev }}
