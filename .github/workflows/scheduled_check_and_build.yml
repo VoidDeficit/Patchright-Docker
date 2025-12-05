@@ -2,8 +2,8 @@ name: scheduled-check-and-build
 
 # Run every 4 hours + allow manual trigger
 on:
-  # schedule:
-  #   - cron: '0 */4 * * *'   # every 4 hours
+  schedule:
+    - cron: '0 */4 * * *'   # every 4 hours
   workflow_dispatch:
 
 permissions:
