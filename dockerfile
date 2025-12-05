@@ -1,16 +1,18 @@
+# See Playwright Docker docs for details. (https://playwright.dev/docs/docker)
 FROM mcr.microsoft.com/playwright:latest
 
-WORKDIR /srv/app
+LABEL org.opencontainers.image.source="https://github.com/Kaliiiiiiiiii-Vinyzu/patchright-nodejs"
+WORKDIR /usr/src/app
 
-# copy package.json for a minimal Node app that uses patchright
-COPY package.json package-lock.json* /srv/app/
+# Install the patchright npm package globally so this image can be used as a drop-in
+# Playwright runtime with Patchright patched-in.
+RUN npm i -g patchright
 
-RUN npm ci --no-audit --no-fund
+# Install the chromium driver/binary that Patchright expects (same command from repo docs).
+# If you prefer Chrome, change "chromium" to "chrome" and ensure you have the right channel available.
+RUN npx patchright install chromium
+# RUN npx patchright install chromium
 
-# if your app needs to install chrome channel (optional)
-# RUN npx patchright install chrome
-
-COPY . /srv/app
-
-EXPOSE 3000
-CMD ["node", "index.js"]
+# Default to node so container can be used to run Playwright/patchright scripts.
+ENTRYPOINT ["node"]
+CMD ["-v"]
