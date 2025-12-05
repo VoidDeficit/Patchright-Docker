@@ -63,8 +63,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ toLower(github.repository_owner) }}/${{ env.IMAGE_NAME }}:${{ steps.get_release.outputs.tag }}
-            ghcr.io/${{ toLower(github.repository_owner) }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ "xuis" }}/${{ env.IMAGE_NAME }}:${{ steps.get_release.outputs.tag }}
+            ghcr.io/${{ "xuis" }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Update .last_patchright_release and push
         if: ${{ steps.get_release.outputs.tag != steps.read_prev.outputs.prev }}
