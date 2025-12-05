@@ -1,0 +1,71 @@
+name: Build image on upstream release (patchright-nodejs)
+
+# run on schedule (every 15 minutes) and manually
+on:
+  workflow_dispatch: # This lets me run the workflow manually in GitHub
+  # schedule: #TODO Uncomment when I want this to run automatically
+  #   - cron: '0 */6 * * *'   # runs every 6 hours, on the hour. Is this too often?
+
+permissions:
+  contents: read
+
+jobs:
+  build-on-release:
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_OWNER: "Kaliiiiiiiiii-Vinyzu"
+      UPSTREAM_REPO: "patchright-nodejs"
+      REGISTRY_HOST: ${{ secrets.REGISTRY_HOST }} #TODO 
+      REGISTRY_IMAGE: ${{ secrets.REGISTRY_IMAGE }} #TODO
+    steps:
+      - name: Get latest upstream release tag
+        id: get_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const owner = process.env.UPSTREAM_OWNER;
+            const repo = process.env.UPSTREAM_REPO;
+            const release = await github.rest.repos.getLatestRelease({ owner, repo });
+            return release.data.tag_name;
+      # latest tag is available as steps.get_release.outputs.result
+
+      - name: Checkout (for build context)
+        uses: actions/checkout@v4
+
+      - name: Log in to registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY_HOST }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_TOKEN }}
+
+      - name: Check if image for this tag already exists in registry
+        id: check_image
+        run: |
+          IMAGE="${{ env.REGISTRY_IMAGE }}"
+          TAG="${{ steps.get_release.outputs.result }}"
+          echo "Checking $IMAGE:$TAG"
+          # Try to pull the image; success => exists=true
+          if docker pull "$IMAGE:$TAG"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push (only if image missing)
+        if: steps.check_image.outputs.exists == 'false'
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          # tag with release tag and latest
+          tags: |
+            ${{ env.REGISTRY_IMAGE }}:${{ steps.get_release.outputs.result }}
+            ${{ env.REGISTRY_IMAGE }}:latest
+          # optionally enable buildx cache; configure if you want
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
+
+      - name: Notify already built
+        if: steps.check_image.outputs.exists == 'true'
+        run: echo "Image already exists for tag ${{ steps.get_release.outputs.result }}; skipping build."
