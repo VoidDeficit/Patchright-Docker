@@ -6,7 +6,7 @@ name: Build image on upstream release (patchright-nodejs)
 
 # run on schedule (every 15 minutes) and manually
 on:
-  workflow_dispatch: # This lets me run the workflow manually in GitHub
+  # workflow_dispatch: # This runs the script on every commit.
   # schedule: #TODO Uncomment when I want this to run automatically
   #   - cron: '0 */6 * * *'   # runs every 6 hours, on the hour. Is this too often?
 
