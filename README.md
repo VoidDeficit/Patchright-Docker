@@ -3,7 +3,7 @@ Why can't I run patchright in docker? I don't know why somebody hasn't done this
 
 I want to make something that:
 1. Watches the releases for Patchright https://github.com/Kaliiiiiiiiii-Vinyzu/patchright
-2. When it detects a new release for Patchright is released, build a docker container with Playwrite and patch it with Patchwrite
+2. When it detects a new version for Patchright is released, build a docker container with Playwrite and patch it with Patchwrite
 3. Pushes the docker container to a public repository
 
 Then I should be able to let this script do it's thing unattended, and never look at this repository again. This will probably break at some point, and since I don't know what I'm doing, I won't be able to fix it. But maybe it'll be nice in the meantime!
