@@ -63,8 +63,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.get_release.outputs.tag }}
-            ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+            ghcr.io/${{ toLower(github.repository_owner) }}/${{ env.IMAGE_NAME }}:${{ steps.get_release.outputs.tag }}
+            ghcr.io/${{ toLower(github.repository_owner) }}/${{ env.IMAGE_NAME }}:latest
           # Optionally set platforms or build-args if needed:
           # platforms: linux/amd64,linux/arm64
 
