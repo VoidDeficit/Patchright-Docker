@@ -4,7 +4,7 @@ name: scheduled-check-and-build
 on:
   # schedule:
   #   - cron: '0 */4 * * *'   # every 4 hours
-  # workflow_dispatch:
+  workflow_dispatch:
 
 permissions:
   contents: write     # so the workflow can update the .last_patchright_release file
