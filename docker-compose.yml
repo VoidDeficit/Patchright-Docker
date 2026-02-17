@@ -1,8 +1,8 @@
 services:
   patchright:
-    build: patchright
+    image: ghcr.io/voiddeficit/patchright:latest
     container_name: patchright
+    volumes:
+      - ./app/:/usr/src/app
     environment:
       - NODE_PATH=/deps/node_modules
-    volumes:
-      - ./app:/usr/src/app
