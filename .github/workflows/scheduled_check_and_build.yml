@@ -61,6 +61,7 @@ jobs:
 
 
       - name: Build and push Docker image to GHCR
+        if: ${{ steps.get_release.outputs.tag != steps.read_prev.outputs.prev }}
         uses: docker/build-push-action@v4
         with:
           context: .
