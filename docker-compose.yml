@@ -2,7 +2,10 @@ services:
   patchright:
     image: ghcr.io/voiddeficit/patchright:latest
     container_name: patchright
-    volumes:
-      - ./app/:/usr/src/app
+    restart: unless-stopped
     environment:
       - NODE_PATH=/deps/node_modules
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    volumes:
+      - ./app/:/app/
+    working_dir: /app
