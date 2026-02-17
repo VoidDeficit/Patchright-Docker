@@ -1,9 +1,8 @@
 services:
   patchright:
-    image: #TODO Wherever I end up putting the image
+    build: patchright
     container_name: patchright
-    restart: unless-stopped
-    volumes:
-      - /dev/shm:/dev/shm           # ai said this would sometimes helps browser stability. I don't know about this
     environment:
-      # - NODE_ENV=production   # ai suggested this, I am doubting it.
+      - NODE_PATH=/deps/node_modules
+    volumes:
+      - ./app:/usr/src/app
