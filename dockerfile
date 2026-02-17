@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.source="https://github.com/Kaliiiiiiiiii-Vinyzu/p
 
 # 1. Install Patchright in the parent directory
 WORKDIR /deps
-RUN npm init -y && npm -i -g patchright
+RUN npm init -y && npm install patchright
 RUN npx patchright install --with-deps chromium
 
 # 2. Set the working directory to the app folder
