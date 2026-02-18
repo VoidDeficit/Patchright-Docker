@@ -1,11 +1,13 @@
 services:
   patchright:
-    image: ghcr.io/voiddeficit/patchright:latest
+    image: patchright-vnc:latest
     container_name: patchright
     restart: unless-stopped
+    ports:
+      - "5901:5900" # VNC
     environment:
-      - NODE_PATH=/deps/node_modules
+      - NODE_PATH=/opt/deps/node_modules
       - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     volumes:
-      - ./app/:/app/
-    working_dir: /app
+      - ./app/:/opt/app
+    working_dir: /opt/app

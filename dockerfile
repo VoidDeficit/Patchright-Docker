@@ -3,24 +3,34 @@ FROM mcr.microsoft.com/playwright:latest
 # Use this to link the image to your repo in GHCR
 LABEL org.opencontainers.image.source="https://github.com/Kaliiiiiiiiii-Vinyzu/patchright-nodejs"
 
-# 1. Setup the dependencies directory
-WORKDIR /deps
+# 1. Install System Dependencies
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    xvfb \
+    x11vnc \
+    fluxbox \
+    dbus-x11 \
+    dos2unix \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# We combine these into one RUN to ensure they happen in the same layer
-# and we add 'ls' at the end to force the build log to show us the result
+# 2. Setup Patchright
+WORKDIR /opt/deps
 RUN npm init -y && \
     npm install patchright && \
-    npx patchright install --with-deps chromium && \
-    ls -lah /deps/node_modules  # This verifies it worked during the build
+    npx patchright install --with-deps chromium
 
-# 2. Setup the application directory
-WORKDIR /app
+WORKDIR /opt/app
 
-# 3. Environment Variables
-# This tells Node where the library is
-ENV NODE_PATH=/deps/node_modules
-# This tells Patchright where the chromium binary is
+# 3. Env Vars
+ENV NODE_PATH=/opt/deps/node_modules
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV DISPLAY=:99
 
-ENTRYPOINT []
+# 4. Script Setup
+COPY entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+# Keep the container running
 CMD ["sleep", "infinity"]

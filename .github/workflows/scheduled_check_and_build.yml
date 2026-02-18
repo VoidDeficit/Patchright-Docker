@@ -16,7 +16,7 @@ jobs:
     env:
       UPSTREAM_OWNER: Kaliiiiiiiiii-Vinyzu
       UPSTREAM_REPO: patchright
-      IMAGE_NAME: patchright
+      IMAGE_NAME: patchright-vnc
 
     steps:
       - name: Checkout repo
@@ -68,8 +68,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ steps.owner_lc.outputs.owner_lc }}/patchright:${{ steps.get_release.outputs.tag }}
-            ghcr.io/${{ steps.owner_lc.outputs.owner_lc }}/patchright:latest
+            ghcr.io/${{ steps.owner_lc.outputs.owner_lc }}/patchright-vnc:${{ steps.get_release.outputs.tag }}
+            ghcr.io/${{ steps.owner_lc.outputs.owner_lc }}/patchright-vnc:latest
 
 
 
