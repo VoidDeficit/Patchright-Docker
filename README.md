@@ -2,7 +2,7 @@
 This works now, however it is experimental so expect some bugs and glitches.
 
 What this repository does:  
-1. Watches the releases for Patchright https://github.com/Kaliiiiiiiiii-Vinyzu/patchright  
+1. Watches the releases for Patchright https://github.com/Kaliiiiiiiiii-Vinyzu/patchright-nodejs
 2. When it detects a new version for Patchright is released, build a docker container with the official Playwright image (https://hub.docker.com/r/microsoft/playwright) and patch it with Patchwrite
 3. Pushes the docker container to a public repository
 
